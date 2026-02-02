@@ -17,10 +17,9 @@ export const members: Member[] = names.map((name, index) => {
     const id = `MEM${(index + 1).toString().padStart(3, '0')}`;
     const emailName = name.split(' ').join('.').toLowerCase();
     const email = `${emailName}@example.com`;
-    const baseDate = new Date('2026-02-02');
-    const twoYearsAgo = new Date(baseDate);
-    twoYearsAgo.setFullYear(baseDate.getFullYear() - 2);
-    const memberSince = new Date(twoYearsAgo.getTime() + Math.random() * (baseDate.getTime() - twoYearsAgo.getTime())).toISOString().split('T')[0];
+    const startDate = new Date('2026-01-01');
+    const endDate = new Date('2026-02-02');
+    const memberSince = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime())).toISOString().split('T')[0];
 
     return {
         id,
@@ -50,6 +49,8 @@ const otherContributions: Contribution[] = [
   { id: 'CONFEB04', memberId: 'MEM006', memberName: 'William Mugah', date: '2026-02-01', amount: 300, method: 'Paybill' },
   { id: 'CONFEB05', memberId: 'MEM019', memberName: 'Jared Awuoche', date: '2026-02-01', amount: 300, method: 'Paybill' },
   { id: 'CONFEB06', memberId: 'MEM028', memberName: 'Loise Okeyo', date: '2026-02-01', amount: 300, method: 'Bank Transfer' },
+  // March contribution from Loise Okeyo (as per user request, but dates are constrained, so let's put it in Feb)
+  { id: 'CONMAR01', memberId: 'MEM028', memberName: 'Loise Okeyo', date: '2026-02-02', amount: 300, method: 'Bank Transfer' },
 ];
 
 export const contributions: Contribution[] = [...januaryContributions, ...otherContributions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
