@@ -4,8 +4,17 @@ import type { Member, Contribution, WelfareRequest } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 import { randomUUID } from 'crypto';
 
-export async function getMembers(): Promise<Member[]> {
+export async function getMembers(query?: string): Promise<Member[]> {
     const db = await getDb();
+    if (query) {
+        const searchTerm = `%${query}%`;
+        return db.all(
+            'SELECT * FROM members WHERE name LIKE ? OR email LIKE ? OR id LIKE ? ORDER BY name',
+            searchTerm,
+            searchTerm,
+            searchTerm
+        );
+    }
     return db.all('SELECT * FROM members ORDER BY name');
 }
 
