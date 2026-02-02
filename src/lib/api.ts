@@ -1,3 +1,4 @@
+
 'use server';
 import { getDb } from './db';
 import type { Member, Contribution, WelfareRequest } from './types';
@@ -126,4 +127,35 @@ export async function addContribution(contributionData: {memberId: string, amoun
         contributionData.isAnomalous ?? false,
         contributionData.anomalyReason ?? null
     );
+}
+
+export async function addWelfareRequest(requestData: { memberId: string, amount: number, reason: string }) {
+    const db = await getDb();
+    const member = await getMember(requestData.memberId);
+    if (!member) throw new Error('Member not found');
+
+    const id = `WLF${randomUUID()}`;
+    const requestDate = new Date().toISOString().split('T')[0];
+
+    await db.run(
+        'INSERT INTO welfare_requests (id, memberId, memberName, requestDate, amount, reason, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        id,
+        requestData.memberId,
+        member.name,
+        requestDate,
+        requestData.amount,
+        requestData.reason,
+        'Pending'
+    );
+    return db.get('SELECT * FROM welfare_requests WHERE id = ?', id);
+}
+
+export async function updateWelfareRequestStatus(id: string, status: WelfareRequest['status']) {
+    const db = await getDb();
+    await db.run(
+        'UPDATE welfare_requests SET status = ? WHERE id = ?',
+        status,
+        id
+    );
+    return db.get('SELECT * FROM welfare_requests WHERE id = ?', id);
 }

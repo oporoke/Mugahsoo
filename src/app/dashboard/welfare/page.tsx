@@ -1,9 +1,12 @@
 
 import { WelfareTable } from '@/components/welfare-table';
-import { getWelfareRequests } from '@/lib/api';
+import { getWelfareRequests, getMembers } from '@/lib/api';
 
 export default async function WelfarePage() {
-  const allRequests = await getWelfareRequests();
+  const [allRequests, allMembers] = await Promise.all([
+    getWelfareRequests(),
+    getMembers(),
+  ]);
 
-  return <WelfareTable requests={allRequests} />;
+  return <WelfareTable requests={allRequests} members={allMembers} />;
 }

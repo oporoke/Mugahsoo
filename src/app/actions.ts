@@ -9,8 +9,11 @@ import {
   getContributionsForMember, 
   getMember,
   updateMember as dbUpdateMember,
-  deleteMember as dbDeleteMember
+  deleteMember as dbDeleteMember,
+  addWelfareRequest as dbAddWelfareRequest,
+  updateWelfareRequestStatus as dbUpdateWelfareRequestStatus
 } from '@/lib/api';
+import type { WelfareRequest } from '@/lib/types';
 
 export async function addMemberAction(formData: FormData) {
   const name = formData.get('name') as string;
@@ -113,5 +116,39 @@ export async function addContributionAction(formData: FormData) {
   } catch (error) {
     console.error('Error during anomaly check:', error);
     return { success: false, isAnomalous: false, reason: 'An error occurred while checking the contribution.' };
+  }
+}
+
+
+export async function addWelfareRequestAction(formData: FormData) {
+  const memberId = formData.get('memberId') as string;
+  const amount = Number(formData.get('amount'));
+  const reason = formData.get('reason') as string;
+
+  if (!memberId || !amount || !reason) {
+    return { success: false, message: 'Member, amount, and reason are required.' };
+  }
+
+  try {
+    await dbAddWelfareRequest({ memberId, amount, reason });
+    revalidatePath('/dashboard/welfare');
+    revalidatePath('/dashboard');
+    return { success: true, message: 'Welfare request added successfully.' };
+  } catch (error) {
+    console.error('Error adding welfare request:', error);
+    return { success: false, message: 'Failed to add welfare request.' };
+  }
+}
+
+export async function updateWelfareRequestStatusAction(requestId: string, status: WelfareRequest['status']) {
+  try {
+    await dbUpdateWelfareRequestStatus(requestId, status);
+    revalidatePath('/dashboard/welfare');
+    revalidatePath('/dashboard/members');
+    revalidatePath('/dashboard');
+    return { success: true, message: `Request status updated to ${status}.` };
+  } catch (error) {
+    console.error('Error updating welfare request status:', error);
+    return { success: false, message: 'Failed to update request status.' };
   }
 }
