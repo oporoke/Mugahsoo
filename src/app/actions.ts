@@ -43,6 +43,7 @@ export async function updateMemberAction(formData: FormData) {
 
   try {
     await dbUpdateMember(id, { name, email, status });
+    revalidatePath(`/dashboard/members/${id}`);
     revalidatePath('/dashboard/members');
     revalidatePath('/dashboard/contributions');
     revalidatePath('/dashboard/welfare');
@@ -103,6 +104,7 @@ export async function addContributionAction(formData: FormData) {
       anomalyReason: result.reason
     });
     
+    revalidatePath(`/dashboard/members/${memberId}`);
     revalidatePath('/dashboard/contributions');
     revalidatePath('/dashboard');
     revalidatePath('/dashboard/members');
