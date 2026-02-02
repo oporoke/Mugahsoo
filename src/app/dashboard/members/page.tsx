@@ -1,9 +1,9 @@
-import { MembersTable } from '@/components/members-table';
-import { members } from '@/lib/data';
 
-export default function MembersPage() {
-  // In a real app, you'd fetch members from an API
-  const allMembers = members;
+import { MembersTable } from '@/components/members-table';
+import { getMembers } from '@/lib/api';
+
+export default async function MembersPage() {
+  const allMembers = await getMembers();
 
   return <MembersTable members={allMembers} />;
 }

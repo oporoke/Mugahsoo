@@ -1,20 +1,27 @@
+
 'use server';
 
 import { flagAnomalousContributions, FlagAnomalousContributionsInput } from '@/ai/flows/flag-anomalous-contributions';
 import { revalidatePath } from 'next/cache';
-
-// In a real app, you would have a database and API calls here.
-// For now, we simulate and revalidate paths to trigger UI updates.
+import { addMember as dbAddMember, addContribution as dbAddContribution, getContributionsForMember, getMember } from '@/lib/api';
 
 export async function addMemberAction(formData: FormData) {
-  const member = {
-    name: formData.get('name'),
-    email: formData.get('email'),
-  };
-  console.log('Adding new member:', member);
-  // Simulate adding to a database
-  revalidatePath('/dashboard/members');
-  return { success: true, message: `Member ${member.name} added successfully.` };
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  
+  if (!name || !email) {
+    return { success: false, message: 'Name and email are required.' };
+  }
+
+  try {
+    await dbAddMember({ name, email });
+    console.log('Adding new member:', {name, email});
+    revalidatePath('/dashboard/members');
+    return { success: true, message: `Member ${name} added successfully.` };
+  } catch (error) {
+    console.error('Error adding member:', error);
+    return { success: false, message: 'Failed to add member. Email might already exist.' };
+  }
 }
 
 export async function addContributionAction(formData: FormData) {
@@ -22,24 +29,29 @@ export async function addContributionAction(formData: FormData) {
   const amount = Number(formData.get('amount'));
   const date = new Date().toISOString().split('T')[0];
 
-  // In a real app, you'd fetch the member's full contribution history from a database.
-  // For this demo, we'll use a mock history.
-  const mockHistory = [
-    { date: '2024-04-01', amount: 100 },
-    { date: '2024-05-01', amount: 100 },
-    { date: '2024-06-01', amount: 100 },
-  ];
+  const member = await getMember(memberId);
+  if (!member) {
+      return { success: false, isAnomalous: false, reason: 'Member not found.' };
+  }
+
+  const contributionHistory = await getContributionsForMember(memberId);
 
   const input: FlagAnomalousContributionsInput = {
     memberId,
-    contributionHistory: [...mockHistory, { date, amount }],
+    contributionHistory: [...contributionHistory, { date, amount }],
   };
 
   try {
     const result = await flagAnomalousContributions(input);
     console.log('Contribution added and checked for anomaly:', { memberId, amount, date, anomalyResult: result });
     
-    // Here you would save the contribution to the database, including the anomaly flag.
+    await dbAddContribution({
+      memberId,
+      amount,
+      date,
+      isAnomalous: result.isAnomalous,
+      anomalyReason: result.reason
+    });
     
     revalidatePath('/dashboard/contributions');
     revalidatePath('/dashboard');

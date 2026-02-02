@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
@@ -8,20 +9,20 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
-import { contributions } from '@/lib/data';
+import type { Contribution } from '@/lib/types';
 
-const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const monthlyData = monthNames.map(month => ({ name: month, total: 0 }));
+export function OverviewChart({ contributions }: { contributions: Contribution[] }) {
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthlyData = monthNames.map(month => ({ name: month, total: 0 }));
 
-contributions.forEach(c => {
-  const date = new Date(c.date);
-  if (date.getFullYear() === 2026) {
-    const month = date.getMonth();
-    monthlyData[month].total += c.amount;
-  }
-});
+  contributions.forEach(c => {
+    const date = new Date(c.date);
+    if (date.getFullYear() === 2026) {
+      const month = date.getMonth();
+      monthlyData[month].total += c.amount;
+    }
+  });
 
-export function OverviewChart() {
   return (
     <Card className="lg:col-span-2 xl:col-span-2">
       <CardHeader>

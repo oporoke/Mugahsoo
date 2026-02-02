@@ -1,14 +1,21 @@
+
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { members, contributions, welfareRequests } from '@/lib/data';
+import type { Contribution, Member, WelfareRequest } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
-import { Landmark, Users, Activity, Wallet } from 'lucide-react';
+import { Wallet, Users, Activity, Landmark } from 'lucide-react';
 
-export function DashboardStats() {
+interface DashboardStatsProps {
+    members: Member[];
+    contributions: Contribution[];
+    welfareRequests: WelfareRequest[];
+}
+
+export function DashboardStats({ members, contributions, welfareRequests }: DashboardStatsProps) {
   const totalFundBalance = contributions.reduce((sum, c) => sum + c.amount, 0) - welfareRequests.filter(r => r.status === 'Disbursed').reduce((sum, r) => sum + r.amount, 0);
   const totalMembers = members.length;
   const pendingRequests = welfareRequests.filter(r => r.status === 'Pending').length;

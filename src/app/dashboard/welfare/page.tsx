@@ -1,9 +1,9 @@
-import { WelfareTable } from '@/components/welfare-table';
-import { welfareRequests } from '@/lib/data';
 
-export default function WelfarePage() {
-  // In a real app, you'd fetch data from an API
-  const allRequests = welfareRequests.sort((a, b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime());
+import { WelfareTable } from '@/components/welfare-table';
+import { getWelfareRequests } from '@/lib/api';
+
+export default async function WelfarePage() {
+  const allRequests = await getWelfareRequests();
 
   return <WelfareTable requests={allRequests} />;
 }

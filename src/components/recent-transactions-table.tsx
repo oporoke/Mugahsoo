@@ -1,3 +1,4 @@
+
 import {
   Avatar,
   AvatarFallback,
@@ -19,11 +20,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { contributions, welfareRequests, members } from '@/lib/data';
+import type { Contribution, Member, WelfareRequest } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
-export function RecentTransactionsTable() {
+interface RecentTransactionsTableProps {
+    members: Member[];
+    contributions: Contribution[];
+    welfareRequests: WelfareRequest[];
+}
+
+export function RecentTransactionsTable({ members, contributions, welfareRequests }: RecentTransactionsTableProps) {
     const allTransactions = [
     ...contributions.map(c => ({
       id: `c-${c.id}`,

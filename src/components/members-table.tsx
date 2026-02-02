@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -50,7 +51,7 @@ import {
   AvatarImage,
 } from '@/components/ui/avatar';
 import type { Member, Contribution } from '@/lib/types';
-import { contributions as allContributions } from '@/lib/data';
+import { getContributionsForMember } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -81,7 +82,7 @@ export function MembersTable({ members }: { members: Member[] }) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to add member.',
+        description: result.message ?? 'Failed to add member.',
       });
     }
     setIsSubmitting(false);
@@ -167,10 +168,6 @@ export function MembersTable({ members }: { members: Member[] }) {
 }
 
 function MemberRow({ member }: { member: Member }) {
-  const memberContributions = allContributions.filter(
-    (c) => c.memberId === member.id
-  );
-
   return (
     <TableRow>
       <TableCell className="font-medium">
@@ -213,7 +210,7 @@ function MemberRow({ member }: { member: Member }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <MemberDetailsDialog member={member} contributions={memberContributions} />
+          <MemberDetailsDialog member={member} />
         </Dialog>
       </TableCell>
     </TableRow>
@@ -222,14 +219,26 @@ function MemberRow({ member }: { member: Member }) {
 
 function MemberDetailsDialog({
   member,
-  contributions,
 }: {
   member: Member;
-  contributions: Contribution[];
 }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [contributions, setContributions] = React.useState<Contribution[]>([]);
+  const [isLoadingContributions, setIsLoadingContributions] = React.useState(true);
   const { toast } = useToast();
   const formRef = React.useRef<HTMLFormElement>(null);
+  
+  const fetchMemberContributions = React.useCallback(async () => {
+    setIsLoadingContributions(true);
+    const memberContributions = await getContributionsForMember(member.id);
+    setContributions(memberContributions);
+    setIsLoadingContributions(false);
+  }, [member.id]);
+
+  React.useEffect(() => {
+    fetchMemberContributions();
+  }, [fetchMemberContributions]);
+
 
   const handleAddContribution = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -252,6 +261,7 @@ function MemberDetailsDialog({
         });
       }
       formRef.current?.reset();
+      fetchMemberContributions(); // Refetch contributions
     } else {
       toast({
         variant: 'destructive',
@@ -300,7 +310,7 @@ function MemberDetailsDialog({
         <div>
           <h3 className="text-lg font-medium mb-2">Contribution History</h3>
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 max-h-60 overflow-y-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -309,7 +319,13 @@ function MemberDetailsDialog({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {contributions.length > 0 ? (
+                  {isLoadingContributions ? (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center">
+                         <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                      </TableCell>
+                    </TableRow>
+                  ) : contributions.length > 0 ? (
                     contributions.map((c) => (
                       <TableRow key={c.id}>
                         <TableCell>
