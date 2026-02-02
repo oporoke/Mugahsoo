@@ -11,10 +11,54 @@ import {
   updateMember as dbUpdateMember,
   deleteMember as dbDeleteMember,
   addWelfareRequest as dbAddWelfareRequest,
-  updateWelfareRequestStatus as dbUpdateWelfareRequestStatus
+  updateWelfareRequestStatus as dbUpdateWelfareRequestStatus,
+  createUserAndMember,
+  getUserByEmail,
 } from '@/lib/api';
 import type { WelfareRequest } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
+import { redirect } from 'next/navigation';
+import bcrypt from 'bcryptjs';
+import { signIn } from '@/auth';
+
+export async function signupAction(formData: FormData) {
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  if (!name || !email || !password) {
+    return { success: false, message: 'Name, email, and password are required.' };
+  }
+  
+  if (password.length < 6) {
+      return { success: false, message: 'Password must be at least 6 characters long.' };
+  }
+
+  const existingUser = await getUserByEmail(email);
+  if (existingUser) {
+    return { success: false, message: 'An account with this email already exists.' };
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  try {
+    await createUserAndMember({ name, email, password: hashedPassword });
+    console.log('New user signed up:', {name, email});
+  } catch (error) {
+    console.error('Error during sign up:', error);
+    return { success: false, message: 'Something went wrong. Please try again.' };
+  }
+  
+  // Automatically sign in the user after successful registration
+  try {
+    await signIn('credentials', { email, password, redirectTo: '/dashboard' });
+  } catch (error) {
+     console.error("Sign in after signup failed:", error);
+     // If sign-in fails, redirect to login page for manual login
+     redirect('/login');
+  }
+}
+
 
 export async function addMemberAction(formData: FormData) {
   const name = formData.get('name') as string;
@@ -24,14 +68,19 @@ export async function addMemberAction(formData: FormData) {
     return { success: false, message: 'Name and email are required.' };
   }
 
+  const existingUser = await getUserByEmail(email);
+  if (existingUser) {
+    return { success: false, message: 'A member with this email already exists.' };
+  }
+
   try {
-    await dbAddMember({ name, email });
+    await createUserAndMember({ name, email });
     console.log('Adding new member:', {name, email});
     revalidatePath('/dashboard/members');
     return { success: true, message: `Member ${name} added successfully.` };
   } catch (error) {
     console.error('Error adding member:', error);
-    return { success: false, message: 'Failed to add member. Email might already exist.' };
+    return { success: false, message: 'Failed to add member.' };
   }
 }
 

@@ -3,7 +3,7 @@
 import prisma from './prisma';
 import type { Member, Contribution, WelfareRequest } from './types';
 import { PlaceHolderImages } from './placeholder-images';
-import { randomUUID } from 'crypto';
+import type { User as NextAuthUser } from 'next-auth';
 
 // Helper to convert Prisma's Date objects to strings for serializing to client components
 const serializeMember = (member: any): Member => ({
@@ -29,7 +29,6 @@ export async function getMembers(query?: string): Promise<Member[]> {
             OR: [
                 { name: { contains: query, mode: 'insensitive' } },
                 { email: { contains: query, mode: 'insensitive' } },
-                { id: { contains: query, mode: 'insensitive' } },
             ],
         }
         : {};
@@ -65,6 +64,11 @@ export async function getMember(id: string): Promise<Member | null> {
     return serializeMember(member);
 }
 
+export async function getUserByEmail(email: string) {
+    return prisma.user.findUnique({ where: { email } });
+}
+
+
 export async function getContributionsForMember(memberId: string): Promise<Contribution[]> {
     const contributions = await prisma.contribution.findMany({
         where: { memberId },
@@ -88,22 +92,49 @@ export async function getDashboardData() {
     return { members, contributions, welfareRequests };
 }
 
-export async function addMember(memberData: {name: string, email: string}) {
-    const id = `MEM${randomUUID()}`;
-    const allMembersCount = await prisma.member.count();
-    const avatarUrl = PlaceHolderImages[allMembersCount % PlaceHolderImages.length].imageUrl;
 
-    const newMember = await prisma.member.create({
-        data: {
-            id,
-            name: memberData.name,
-            email: memberData.email,
-            avatarUrl,
-            status: 'active',
-        },
+export async function createUserAndMember(userData: {name: string, email: string, password?: string, image?: string}) {
+    return await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+            data: {
+                name: userData.name,
+                email: userData.email,
+                password: userData.password,
+                image: userData.image,
+            }
+        });
+
+        await createMemberForUser(user, tx);
+
+        return user;
     });
-    return serializeMember(newMember);
 }
+
+export async function createMemberForUser(user: NextAuthUser, tx?: any) {
+    const prismaTx = tx || prisma;
+    if (!user.id || !user.name || !user.email) {
+        throw new Error("User object is missing required fields (id, name, email).");
+    }
+
+    const allMembersCount = await prismaTx.member.count();
+    const avatarUrl = user.image || PlaceHolderImages[allMembersCount % PlaceHolderImages.length].imageUrl;
+
+    const member = await prismaTx.member.findUnique({ where: { userId: user.id }});
+
+    if (!member) {
+        return await prismaTx.member.create({
+            data: {
+                userId: user.id,
+                name: user.name,
+                email: user.email,
+                avatarUrl,
+                status: 'active',
+            },
+        });
+    }
+    return member;
+}
+
 
 export async function updateMember(id: string, memberData: { name: string, email: string, status: 'active' | 'inactive' }) {
     const updatedMember = await prisma.$transaction(async (tx) => {
@@ -114,6 +145,14 @@ export async function updateMember(id: string, memberData: { name: string, email
                 email: memberData.email,
                 status: memberData.status,
             },
+        });
+
+        await tx.user.update({
+            where: { id: member.userId },
+            data: {
+                name: memberData.name,
+                email: memberData.email,
+            }
         });
 
         await tx.contribution.updateMany({
@@ -132,21 +171,24 @@ export async function updateMember(id: string, memberData: { name: string, email
     return serializeMember(updatedMember);
 }
 
-export async function deleteMember(id: string) {
-    return await prisma.member.delete({ where: { id } });
+export async function deleteMember(memberId: string) {
+    const member = await prisma.member.findUnique({ where: { id: memberId }});
+    if (!member) {
+        throw new Error('Member not found');
+    }
+    // The schema is set to cascade delete, so deleting the user will delete the member, accounts, sessions, etc.
+    return await prisma.user.delete({ where: { id: member.userId } });
 }
 
 export async function addContribution(contributionData: {memberId: string, amount: number, date: string, isAnomalous?: boolean, anomalyReason?: string}) {
     const member = await prisma.member.findUnique({ where: { id: contributionData.memberId }});
     if (!member) throw new Error('Member not found');
 
-    const id = `CON${randomUUID()}`;
     const contributionsCount = await prisma.contribution.count();
     const method = contributionsCount % 2 === 0 ? 'Paybill' : 'Bank Transfer';
 
     await prisma.contribution.create({
         data: {
-            id,
             memberId: contributionData.memberId,
             memberName: member.name,
             date: new Date(contributionData.date),
@@ -161,12 +203,9 @@ export async function addContribution(contributionData: {memberId: string, amoun
 export async function addWelfareRequest(requestData: { memberId: string, amount: number, reason: string }) {
     const member = await prisma.member.findUnique({ where: { id: requestData.memberId }});
     if (!member) throw new Error('Member not found');
-
-    const id = `WLF${randomUUID()}`;
     
     const newRequest = await prisma.welfareRequest.create({
         data: {
-            id,
             memberId: requestData.memberId,
             memberName: member.name,
             amount: requestData.amount,
