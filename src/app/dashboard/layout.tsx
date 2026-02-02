@@ -21,6 +21,7 @@ import {
   User,
   Menu,
   Power,
+  FileText,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
@@ -38,11 +39,12 @@ export default async function DashboardLayout({
     { href: '/dashboard', icon: User, label: 'My Profile' },
     { href: '/dashboard/contributions', icon: HandCoins, label: 'Contributions' },
     { href: '/dashboard/welfare', icon: HeartHandshake, label: 'Welfare' },
+    { href: '/dashboard/reporting', icon: FileText, label: 'Reporting' },
   ];
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-      <div className="hidden border-r bg-card md:block">
+      <div className="hidden border-r bg-card md:block no-print">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/" className="flex items-center gap-2 font-semibold">
@@ -67,7 +69,7 @@ export default async function DashboardLayout({
         </div>
       </div>
       <div className="flex flex-col">
-        <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
+        <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6 no-print">
           <Sheet>
             <SheetTrigger asChild>
               <Button
