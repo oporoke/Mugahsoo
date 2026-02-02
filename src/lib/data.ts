@@ -42,6 +42,17 @@ const januaryContributions: Contribution[] = members.map((member, index) => ({
 
 
 const otherContributions: Contribution[] = [
+  // February contributions
+  { id: 'CONFEB01', memberId: 'MEM049', memberName: 'Dan Mugah', date: '2024-02-10', amount: 300, method: 'Paybill' },
+  { id: 'CONFEB02', memberId: 'MEM001', memberName: 'Kepher Otieno', date: '2024-02-11', amount: 300, method: 'Paybill' },
+  { id: 'CONFEB03', memberId: 'MEM005', memberName: 'Caroline Dima', date: '2024-02-12', amount: 300, method: 'Paybill' },
+  { id: 'CONFEB04', memberId: 'MEM006', memberName: 'William Mugah', date: '2024-02-13', amount: 300, method: 'Paybill' },
+  { id: 'CONFEB05', memberId: 'MEM019', memberName: 'Jared Awuoche', date: '2024-02-14', amount: 300, method: 'Paybill' },
+  { id: 'CONFEB06', memberId: 'MEM028', memberName: 'Loise Okeyo', date: '2024-02-15', amount: 300, method: 'Bank Transfer' },
+
+  // March contributions
+  { id: 'CONMAR01', memberId: 'MEM028', memberName: 'Loise Okeyo', date: '2024-03-15', amount: 300, method: 'Bank Transfer' },
+
   // Contributions from the list
   { id: 'CON001', memberId: 'MEM006', memberName: 'William Mugah', date: '2024-07-15', amount: 300, method: 'Paybill' },
   { id: 'CON002', memberId: 'MEM010', memberName: 'Mary Ann', date: '2024-07-15', amount: 300, method: 'Paybill' },
