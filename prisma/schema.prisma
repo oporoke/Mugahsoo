@@ -1,40 +1,11 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  binaryTargets = ["debian-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -49,6 +20,33 @@ model User {
   member        Member?
 }
 
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -58,37 +56,45 @@ model VerificationToken {
 }
 
 model Member {
-  id              String           @id @default(cuid())
-  userId          String           @unique
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name            String
-  email           String           @unique
-  memberSince     DateTime         @default(now())
-  avatarUrl       String
-  status          String           @default("active") // "active" or "inactive"
-  contributions   Contribution[]
+  id          String         @id @default(cuid())
+  userId      String         @unique
+  name        String
+  email       String         @unique
+  memberSince DateTime       @default(now())
+  avatarUrl   String
+  status      String         @default("active") // "active" or "inactive"
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contributions Contribution[]
   welfareRequests WelfareRequest[]
+
+  @@index([userId])
 }
 
 model Contribution {
   id            String   @id @default(cuid())
   memberId      String
-  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberName    String
   date          DateTime
   amount        Float
-  method        String // "Paybill" or "Bank Transfer"
+  method        String // "Paybill", "Bank Transfer"
   isAnomalous   Boolean? @default(false)
   anomalyReason String?
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
 }
 
 model WelfareRequest {
   id          String   @id @default(cuid())
   memberId    String
-  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberName  String
   requestDate DateTime @default(now())
   amount      Float
   reason      String
-  status      String // "Pending", "Approved", "Rejected", "Disbursed"
+  status      String   @default("Pending") // "Pending", "Approved", "Rejected", "Disbursed"
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
 }
