@@ -15,7 +15,7 @@ const monthlyData = monthNames.map(month => ({ name: month, total: 0 }));
 
 contributions.forEach(c => {
   const date = new Date(c.date);
-  if (date.getFullYear() === 2024) {
+  if (date.getFullYear() === 2026) {
     const month = date.getMonth();
     monthlyData[month].total += c.amount;
   }
