@@ -1,8 +1,7 @@
 
 import { ContributionsTable } from '@/components/contributions-table';
-import { getContributions } from '@/lib/api';
+import { getContributions, getMemberByUserId } from '@/lib/api';
 import { auth } from '@/auth';
-import { getMemberByUserId } from '@/lib/api';
 import { redirect } from 'next/navigation';
 
 export default async function ContributionsPage() {
@@ -11,12 +10,19 @@ export default async function ContributionsPage() {
     redirect('/login');
   }
 
-  const member = await getMemberByUserId(session.user.id);
-  if (!member) {
-    return <p>Member details not found.</p>;
+  const userRole = session.user.role;
+  let memberId: string | undefined;
+
+  // Members only see their own contributions. Admins/Treasurers see all.
+  if (userRole === 'MEMBER') {
+    const member = await getMemberByUserId(session.user.id);
+    if (!member) {
+      return <p>Member details not found.</p>;
+    }
+    memberId = member.id;
   }
   
-  const allContributions = await getContributions(undefined, member.id);
+  const allContributions = await getContributions(undefined, memberId);
 
   return <ContributionsTable contributions={allContributions} />;
 }

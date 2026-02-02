@@ -1,23 +1,14 @@
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  accounts      Account[]
-  sessions      Session[]
-  member        Member?
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model Account {
@@ -47,6 +38,25 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  accounts      Account[]
+  sessions      Session[]
+  member        Member?
+  role          Role      @default(MEMBER)
+}
+
+enum Role {
+  ADMIN
+  TREASURER
+  MEMBER
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -58,12 +68,12 @@ model VerificationToken {
 model Member {
   id              String           @id @default(cuid())
   userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   name            String
   email           String           @unique
   memberSince     DateTime         @default(now())
   avatarUrl       String?
-  status          String
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          String           @default("active") // active, inactive
   contributions   Contribution[]
   welfareRequests WelfareRequest[]
 }
@@ -71,22 +81,22 @@ model Member {
 model Contribution {
   id            String    @id @default(cuid())
   memberId      String
+  member        Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberName    String
   date          DateTime
   amount        Float
-  method        String
-  isAnomalous   Boolean   @default(false)
+  method        String // Paybill, Bank Transfer
+  isAnomalous   Boolean?
   anomalyReason String?
-  member        Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 model WelfareRequest {
   id          String   @id @default(cuid())
   memberId    String
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberName  String
   requestDate DateTime @default(now())
   amount      Float
   reason      String
-  status      String
-  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  status      String // Pending, Approved, Rejected, Disbursed
 }

@@ -19,7 +19,7 @@ import type { WelfareRequest } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
-import { signIn } from '@/auth';
+import { auth, signIn } from '@/auth';
 
 export async function signupAction(formData: FormData) {
   const name = formData.get('name') as string;
@@ -189,6 +189,13 @@ export async function addWelfareRequestAction(formData: FormData) {
 }
 
 export async function updateWelfareRequestStatusAction(requestId: string, status: WelfareRequest['status']) {
+  const session = await auth();
+  const userRole = session?.user.role;
+
+  if (userRole !== 'ADMIN' && userRole !== 'TREASURER') {
+      return { success: false, message: 'You are not authorized to perform this action.' };
+  }
+  
   try {
     const updatedRequest = await dbUpdateWelfareRequestStatus(requestId, status);
     if (updatedRequest) {

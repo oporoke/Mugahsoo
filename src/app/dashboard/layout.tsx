@@ -22,6 +22,7 @@ import {
   Menu,
   Power,
   FileText,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
@@ -34,13 +35,17 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
   const user = session?.user;
+  const userRole = user?.role ?? 'MEMBER';
 
-  const navItems = [
-    { href: '/dashboard', icon: User, label: 'My Profile' },
-    { href: '/dashboard/contributions', icon: HandCoins, label: 'Contributions' },
-    { href: '/dashboard/welfare', icon: HeartHandshake, label: 'Welfare' },
-    { href: '/dashboard/reporting', icon: FileText, label: 'Reporting' },
+  const allNavItems = [
+    { href: '/dashboard', icon: User, label: 'My Profile', roles: ['ADMIN', 'TREASURER', 'MEMBER'] },
+    { href: '/dashboard/members', icon: Users, label: 'Members', roles: ['ADMIN'] },
+    { href: '/dashboard/contributions', icon: HandCoins, label: 'Contributions', roles: ['ADMIN', 'TREASURER', 'MEMBER'] },
+    { href: '/dashboard/welfare', icon: HeartHandshake, label: 'Welfare', roles: ['ADMIN', 'TREASURER', 'MEMBER'] },
+    { href: '/dashboard/reporting', icon: FileText, label: 'Reporting', roles: ['ADMIN', 'TREASURER'] },
   ];
+
+  const navItems = allNavItems.filter((item) => item.roles.includes(userRole));
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">

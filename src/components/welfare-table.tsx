@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { PlusCircle, Loader2, MoreHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,13 +35,19 @@ import { PageHeader } from './page-header';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { addWelfareRequestAction } from '@/app/actions';
+import { addWelfareRequestAction, updateWelfareRequestStatusAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Role } from '@prisma/client';
 
-export function WelfareTable({ requests, currentMember }: { requests: WelfareRequest[], currentMember: Member }) {
-  const router = useRouter();
-
+export function WelfareTable({ requests, currentMember, role }: { requests: WelfareRequest[], currentMember: Member, role: Role }) {
+  const { toast } = useToast();
+  
   const getStatusBadge = (status: WelfareRequest['status']) => {
     switch (status) {
       case 'Pending':
@@ -57,32 +63,46 @@ export function WelfareTable({ requests, currentMember }: { requests: WelfareReq
     }
   };
 
+  const handleStatusChange = async (requestId: string, status: WelfareRequest['status']) => {
+    const result = await updateWelfareRequestStatusAction(requestId, status);
+    if (result.success) {
+        toast({ title: 'Success', description: result.message });
+    } else {
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
+    }
+  };
+
+  const isAdminOrTreasurer = role === 'ADMIN' || role === 'TREASURER';
+
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Your Welfare Requests">
+      <PageHeader title={isAdminOrTreasurer ? "Welfare Requests" : "Your Welfare Requests"}>
         <NewRequestDialog memberId={currentMember.id} />
       </PageHeader>
       <Card>
         <CardHeader>
           <CardTitle>Request History</CardTitle>
           <CardDescription>
-            Submit and track your welfare requests.
+            {isAdminOrTreasurer ? "Manage all member welfare requests." : "Submit and track your welfare requests."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                {isAdminOrTreasurer && <TableHead>Member</TableHead>}
                 <TableHead>Reason</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="hidden md:table-cell">Date</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
+                {isAdminOrTreasurer && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {requests.length > 0 ? (
                 requests.map((request) => (
                   <TableRow key={request.id}>
+                    {isAdminOrTreasurer && <TableCell>{request.memberName}</TableCell>}
                     <TableCell>
                       {request.reason}
                     </TableCell>
@@ -97,11 +117,28 @@ export function WelfareTable({ requests, currentMember }: { requests: WelfareReq
                     <TableCell className="text-right">
                       {formatCurrency(request.amount)}
                     </TableCell>
+                    {isAdminOrTreasurer && (
+                        <TableCell className="text-right">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <span className="sr-only">Open menu</span>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleStatusChange(request.id, 'Approved')}>Approve</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(request.id, 'Disbursed')}>Disburse</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(request.id, 'Rejected')}>Reject</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                    )}
                   </TableRow>
                 ))
               ) : (
                  <TableRow>
-                  <TableCell colSpan={4} className="text-center">
+                  <TableCell colSpan={isAdminOrTreasurer ? 6 : 4} className="text-center">
                     No welfare requests found.
                   </TableCell>
                 </TableRow>
@@ -171,5 +208,5 @@ function NewRequestDialog({ memberId }: { memberId: string }) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
