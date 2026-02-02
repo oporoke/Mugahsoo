@@ -50,12 +50,13 @@ export default async function SearchPage({
     return false;
   })?.value || tabs[0].value;
   
+  const gridColsClass = tabs.length === 3 ? 'grid-cols-3' : 'grid-cols-2';
 
   return (
     <div className="flex flex-col gap-4">
       <PageHeader title={`Search Results for "${query}"`} />
       <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList className={`grid w-full grid-cols-${tabs.length}`}>
+        <TabsList className={`grid w-full ${gridColsClass}`}>
             {tabs.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
         </TabsList>
         {userRole === 'ADMIN' && (

@@ -18,7 +18,6 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   HandCoins,
   HeartHandshake,
-  User,
   Menu,
   Power,
   FileText,
@@ -132,10 +131,12 @@ export default async function DashboardLayout({
                 }}
                 className="w-full"
               >
-                  <button type="submit" className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent">
-                      <Power className="h-4 w-4" />
+                <DropdownMenuItem asChild>
+                  <button type="submit" className="w-full">
+                      <Power className="mr-2 h-4 w-4" />
                       <span>Logout</span>
                   </button>
+                </DropdownMenuItem>
               </form>
             </DropdownMenuContent>
           </DropdownMenu>
