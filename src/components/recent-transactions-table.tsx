@@ -76,8 +76,8 @@ export function RecentTransactionsTable({ members, contributions, welfareRequest
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="hidden h-9 w-9 sm:flex">
-                       <AvatarImage src={member?.avatarUrl} alt={member?.name} />
-                      <AvatarFallback>{member?.name.slice(0, 2)}</AvatarFallback>
+                       <AvatarImage src={member?.avatarUrl} alt={member?.name ?? 'Member Avatar'} />
+                      <AvatarFallback>{member?.name.slice(0, 2) ?? '??'}</AvatarFallback>
                     </Avatar>
                     <div className="font-medium">{transaction.memberName}</div>
                   </div>

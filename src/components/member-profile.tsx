@@ -43,7 +43,6 @@ import {
   AvatarImage,
 } from '@/components/ui/avatar';
 import type { Member, Contribution, WelfareRequest } from '@/lib/types';
-import { getContributionsForMember, getWelfareRequestsForMember } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -69,21 +68,6 @@ export function MemberProfile({
   currentUserRole: Role;
 }) {
   const [isEditOpen, setEditOpen] = React.useState(false);
-  
-  const [contributions, setContributions] = React.useState<Contribution[]>(initialContributions);
-  const [welfareRequests, setWelfareRequests] = React.useState<WelfareRequest[]>(initialWelfareRequests);
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  const fetchData = React.useCallback(async () => {
-    setIsLoading(true);
-    const [contribs, requests] = await Promise.all([
-      getContributionsForMember(member.id),
-      getWelfareRequestsForMember(member.id)
-    ]);
-    setContributions(contribs);
-    setWelfareRequests(requests);
-    setIsLoading(false);
-  }, [member.id]);
 
   const getStatusBadge = (status: WelfareRequest['status']) => {
     switch (status) {
@@ -148,9 +132,6 @@ export function MemberProfile({
                     <CardDescription>A log of all contributions from {member.name}.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0 max-h-[60vh] overflow-y-auto">
-                  {isLoading ? (
-                    <div className="flex justify-center items-center p-6"><Loader2 className="h-6 w-6 animate-spin" /></div>
-                  ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -159,8 +140,8 @@ export function MemberProfile({
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {contributions.length > 0 ? (
-                          contributions.map((c) => (
+                        {initialContributions.length > 0 ? (
+                          initialContributions.map((c) => (
                             <TableRow key={c.id}>
                               <TableCell>
                                 <div className="flex items-center gap-2">
@@ -181,7 +162,6 @@ export function MemberProfile({
                         )}
                       </TableBody>
                     </Table>
-                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -192,9 +172,6 @@ export function MemberProfile({
                         <CardDescription>A log of all welfare requests from {member.name}.</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0 max-h-[60vh] overflow-y-auto">
-                    {isLoading ? (
-                      <div className="flex justify-center items-center p-6"><Loader2 className="h-6 w-6 animate-spin" /></div>
-                    ) : (
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -205,8 +182,8 @@ export function MemberProfile({
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {welfareRequests.length > 0 ? (
-                            welfareRequests.map((r) => (
+                          {initialWelfareRequests.length > 0 ? (
+                            initialWelfareRequests.map((r) => (
                               <TableRow key={r.id}>
                                 <TableCell>{new Date(r.requestDate).toLocaleDateString()}</TableCell>
                                 <TableCell>{r.reason}</TableCell>
@@ -219,7 +196,6 @@ export function MemberProfile({
                           )}
                         </TableBody>
                       </Table>
-                    )}
                   </CardContent>
                 </Card>
             </TabsContent>

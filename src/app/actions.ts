@@ -20,6 +20,7 @@ import { formatCurrency } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 import { auth, signIn } from '@/auth';
+import prisma from '@/lib/prisma';
 
 export async function signupAction(prevState: any, formData: FormData) {
   const name = formData.get('name') as string;
@@ -35,18 +36,41 @@ export async function signupAction(prevState: any, formData: FormData) {
   }
 
   const existingUser = await getUserByEmail(email);
+
   if (existingUser) {
-    return { success: false, message: 'An account with this email already exists.' };
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  try {
-    await createUserAndMember({ name, email, password: hashedPassword });
-    console.log('New user signed up:', {name, email});
-  } catch (error) {
-    console.error('Error during sign up:', error);
-    return { success: false, message: 'Something went wrong. Please try again.' };
+    if (existingUser.password) {
+      return { success: false, message: 'An account with this email already exists.' };
+    }
+    // User was likely created by an admin and has no password. Let's set it.
+    const hashedPassword = await bcrypt.hash(password, 10);
+    try {
+        await prisma.user.update({
+            where: { email: email },
+            data: { 
+                name: name,
+                password: hashedPassword 
+            },
+        });
+        // Also update the associated member's name
+        await prisma.member.update({
+            where: { userId: existingUser.id },
+            data: { name: name }
+        });
+        console.log('User password set for existing user:', { name, email });
+    } catch (error) {
+        console.error('Error setting password for existing user:', error);
+        return { success: false, message: 'Something went wrong. Please try again.' };
+    }
+  } else {
+    // User does not exist, create a new one.
+    const hashedPassword = await bcrypt.hash(password, 10);
+    try {
+        await createUserAndMember({ name, email, password: hashedPassword });
+        console.log('New user signed up:', { name, email });
+    } catch (error) {
+        console.error('Error during sign up:', error);
+        return { success: false, message: 'Something went wrong. Please try again.' };
+    }
   }
   
   // Automatically sign in the user after successful registration
