@@ -1,23 +1,11 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["debian-openssl-3.0.x"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-model User {
-  id            String          @id @default(cuid())
-  name          String?
-  email         String?         @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  accounts      Account[]
-  sessions      Session[]
-  member        Member?
 }
 
 model Account {
@@ -47,6 +35,18 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String?         @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  member        Member?
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -56,15 +56,15 @@ model VerificationToken {
 }
 
 model Member {
-  id          String         @id @default(cuid())
-  userId      String         @unique
-  name        String
-  email       String         @unique
-  memberSince DateTime       @default(now())
-  avatarUrl   String
-  status      String         @default("active") // "active" or "inactive"
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contributions Contribution[]
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  name            String
+  email           String           @unique
+  memberSince     DateTime         @default(now())
+  avatarUrl       String
+  status          String           @default("active") // "active" or "inactive"
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contributions   Contribution[]
   welfareRequests WelfareRequest[]
 
   @@index([userId])
@@ -76,11 +76,10 @@ model Contribution {
   memberName    String
   date          DateTime
   amount        Float
-  method        String // "Paybill", "Bank Transfer"
+  method        String // "Paybill", "Bank Transfer", etc.
   isAnomalous   Boolean? @default(false)
   anomalyReason String?
-
-  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([memberId])
 }
@@ -92,9 +91,8 @@ model WelfareRequest {
   requestDate DateTime @default(now())
   amount      Float
   reason      String
-  status      String   @default("Pending") // "Pending", "Approved", "Rejected", "Disbursed"
-
-  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  status      String // "Pending", "Approved", "Rejected", "Disbursed"
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([memberId])
 }
