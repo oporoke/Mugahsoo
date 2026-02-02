@@ -73,14 +73,7 @@ export async function signupAction(prevState: any, formData: FormData) {
     }
   }
   
-  // Automatically sign in the user after successful registration
-  try {
-    await signIn('credentials', { email, password, redirectTo: '/dashboard' });
-  } catch (error) {
-     console.error("Sign in after signup failed:", error);
-     // If sign-in fails, redirect to login page for manual login
-     redirect('/login');
-  }
+  return { success: true, message: 'Account created successfully! You can now log in.' };
 }
 
 
@@ -179,6 +172,7 @@ export async function addContributionAction(formData: FormData) {
     });
     
     revalidatePath(`/dashboard`);
+    revalidatePath(`/dashboard/members/${memberId}`);
     revalidatePath('/dashboard/contributions');
 
     return { success: true, ...result };

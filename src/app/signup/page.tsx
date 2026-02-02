@@ -2,13 +2,16 @@
 'use client';
 
 import Link from "next/link";
+import React from "react";
 import { useFormState, useFormStatus } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import { signupAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 function SubmitButton() {
@@ -22,6 +25,18 @@ function SubmitButton() {
 
 export default function SignupPage() {
   const [state, formAction] = useFormState(signupAction, undefined);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (state?.success) {
+      toast({
+        title: 'Success!',
+        description: state.message,
+      });
+      router.push('/login');
+    }
+  }, [state, router, toast]);
   
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background/60 p-4">

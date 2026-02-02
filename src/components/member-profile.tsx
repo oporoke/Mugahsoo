@@ -5,11 +5,13 @@ import * as React from 'react';
 import {
   AlertCircle,
   Loader2,
-  Edit
+  Edit,
+  Trash2,
+  PlusCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { updateMemberAction } from '@/app/actions';
+import { updateMemberAction, addContributionAction, deleteMemberAction } from '@/app/actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +28,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -114,6 +128,9 @@ export function MemberProfile({
              <CardContent>
               <div className="flex gap-2">
                 <Button variant="outline" className="w-full" onClick={() => setEditOpen(true)}><Edit className="mr-2 h-4 w-4"/> Edit Profile</Button>
+                 {currentUserRole === 'ADMIN' && (
+                  <DeleteMemberButton memberId={member.id} memberName={member.name} />
+                )}
               </div>
             </CardContent>
           </Card>
@@ -127,9 +144,12 @@ export function MemberProfile({
             </TabsList>
             <TabsContent value="contributions">
               <Card>
-                <CardHeader>
-                    <CardTitle>Contribution History</CardTitle>
-                    <CardDescription>A log of all contributions from {member.name}.</CardDescription>
+                <CardHeader className="flex flex-row items-start justify-between">
+                    <div>
+                        <CardTitle>Contribution History</CardTitle>
+                        <CardDescription>A log of all contributions from {member.name}.</CardDescription>
+                    </div>
+                    {currentUserRole === 'ADMIN' && <AddContributionDialog memberId={member.id} />}
                 </CardHeader>
                 <CardContent className="p-0 max-h-[60vh] overflow-y-auto">
                     <Table>
@@ -269,5 +289,129 @@ function EditMemberDialog({ member, isOpen, setIsOpen, currentUserRole }: { memb
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+
+function AddContributionDialog({ memberId }: { memberId: string }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(event.currentTarget);
+    const result = await addContributionAction(formData);
+
+    if (result.success) {
+      toast({
+        title: 'Success',
+        description: 'Contribution added successfully.',
+      });
+      if (result.isAnomalous) {
+        toast({
+            variant: 'destructive',
+            title: 'Anomaly Detected',
+            description: result.reason || 'This contribution was flagged as anomalous.',
+        });
+      }
+      setIsOpen(false);
+      router.refresh();
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: result.reason ?? 'Failed to add contribution.',
+      });
+    }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm"><PlusCircle className="mr-2 h-4 w-4" /> Add Contribution</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Add Contribution</DialogTitle>
+            <DialogDescription>
+              Log a new contribution for this member. The date will be set to today.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <input type="hidden" name="memberId" value={memberId} />
+            <div className="grid gap-2">
+              <Label htmlFor="amount">Amount</Label>
+              <Input id="amount" name="amount" type="number" step="0.01" required />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Contribution
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteMemberButton({ memberId, memberName }: { memberId: string, memberName: string }) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    const formData = new FormData();
+    formData.append('id', memberId);
+    const result = await deleteMemberAction(formData);
+
+    if (result.success) {
+      toast({
+        title: 'Success',
+        description: result.message,
+      });
+      router.push('/dashboard/members');
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: result.message ?? 'Failed to delete member.',
+      });
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
+  return (
+    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive" className="w-full"><Trash2 className="mr-2 h-4 w-4"/> Delete Profile</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete {memberName}'s account
+            and remove all their associated data from our servers.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Continue
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
