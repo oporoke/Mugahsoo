@@ -11,35 +11,20 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-// NextAuth Models
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  accounts      Account[]
-  sessions      Session[]
-  member        Member?
-}
-
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -52,6 +37,18 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String?         @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  accounts      Account[]
+  sessions      Session[]
+  member        Member?
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -60,46 +57,38 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Application Models
-
 model Member {
   id              String           @id @default(cuid())
   userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   name            String
   email           String           @unique
   memberSince     DateTime         @default(now())
   avatarUrl       String
-  status          String
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          String           @default("active") // "active" or "inactive"
   contributions   Contribution[]
   welfareRequests WelfareRequest[]
-
-  @@index([userId])
 }
 
 model Contribution {
   id            String   @id @default(cuid())
   memberId      String
+  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberName    String
   date          DateTime
   amount        Float
-  method        String
-  isAnomalous   Boolean?
+  method        String // "Paybill" or "Bank Transfer"
+  isAnomalous   Boolean? @default(false)
   anomalyReason String?
-  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  @@index([memberId])
 }
 
 model WelfareRequest {
   id          String   @id @default(cuid())
   memberId    String
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberName  String
   requestDate DateTime @default(now())
   amount      Float
   reason      String
-  status      String
-  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  @@index([memberId])
+  status      String // "Pending", "Approved", "Rejected", "Disbursed"
 }
