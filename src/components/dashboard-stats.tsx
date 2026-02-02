@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/card';
 import { members, contributions, welfareRequests } from '@/lib/data';
 import { formatCurrency } from '@/lib/utils';
-import { DollarSign, Users, Activity, Wallet } from 'lucide-react';
+import { Landmark, Users, Activity, Wallet } from 'lucide-react';
 
 export function DashboardStats() {
   const totalFundBalance = contributions.reduce((sum, c) => sum + c.amount, 0) - welfareRequests.filter(r => r.status === 'Disbursed').reduce((sum, r) => sum + r.amount, 0);
@@ -26,7 +26,7 @@ export function DashboardStats() {
   const latestMonthTotal = latestMonthContributions.reduce((sum, c) => sum + c.amount, 0);
 
   const stats = [
-    { title: 'Total Fund Balance', value: formatCurrency(totalFundBalance), icon: DollarSign, description: 'Current total funds' },
+    { title: 'Total Fund Balance', value: formatCurrency(totalFundBalance), icon: Landmark, description: 'Current total funds' },
     { title: 'Total Members', value: totalMembers, icon: Users, description: `${activeMembers} active` },
     { title: 'Pending Welfare', value: pendingRequests, icon: Activity, description: 'Requests needing review' },
     { title: 'Latest Month\'s Contributions', value: formatCurrency(latestMonthTotal), icon: Wallet, description: `Contributions in ${monthNames[latestMonth]}` },
