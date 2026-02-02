@@ -13,12 +13,18 @@ export function DashboardStats() {
   const totalMembers = members.length;
   const pendingRequests = welfareRequests.filter(r => r.status === 'Pending').length;
   const activeMembers = members.filter(m => m.status === 'active').length;
+  
+  const julyContributions = contributions.filter(c => {
+    const date = new Date(c.date);
+    return date.getFullYear() === 2024 && date.getMonth() === 6; // 6 is July
+  });
+  const julyTotal = julyContributions.reduce((sum, c) => sum + c.amount, 0);
 
   const stats = [
     { title: 'Total Fund Balance', value: formatCurrency(totalFundBalance), icon: DollarSign, description: 'Current total funds' },
     { title: 'Total Members', value: totalMembers, icon: Users, description: `${activeMembers} active` },
     { title: 'Pending Welfare', value: pendingRequests, icon: Activity, description: 'Requests needing review' },
-    { title: 'This Month\'s Contributions', value: formatCurrency(300), icon: Wallet, description: 'Contributions in July' },
+    { title: 'This Month\'s Contributions', value: formatCurrency(julyTotal), icon: Wallet, description: 'Contributions in July' },
   ];
 
   return (
