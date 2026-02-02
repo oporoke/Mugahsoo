@@ -14,6 +14,7 @@ import {
   updateWelfareRequestStatus as dbUpdateWelfareRequestStatus
 } from '@/lib/api';
 import type { WelfareRequest } from '@/lib/types';
+import { formatCurrency } from '@/lib/utils';
 
 export async function addMemberAction(formData: FormData) {
   const name = formData.get('name') as string;
@@ -130,7 +131,10 @@ export async function addWelfareRequestAction(formData: FormData) {
   }
 
   try {
-    await dbAddWelfareRequest({ memberId, amount, reason });
+    const newRequest = await dbAddWelfareRequest({ memberId, amount, reason });
+    if (newRequest) {
+      console.log(`[SIMULATED NOTIFICATION] Admin notified: New welfare request for ${newRequest.memberName} for ${formatCurrency(newRequest.amount)}.`);
+    }
     revalidatePath('/dashboard/welfare');
     revalidatePath('/dashboard');
     return { success: true, message: 'Welfare request added successfully.' };
@@ -142,7 +146,10 @@ export async function addWelfareRequestAction(formData: FormData) {
 
 export async function updateWelfareRequestStatusAction(requestId: string, status: WelfareRequest['status']) {
   try {
-    await dbUpdateWelfareRequestStatus(requestId, status);
+    const updatedRequest = await dbUpdateWelfareRequestStatus(requestId, status);
+    if (updatedRequest) {
+        console.log(`[SIMULATED NOTIFICATION] Member ${updatedRequest.memberName} notified: Their welfare request status has been updated to "${status}".`);
+    }
     revalidatePath('/dashboard/welfare');
     revalidatePath('/dashboard/members');
     revalidatePath('/dashboard');
