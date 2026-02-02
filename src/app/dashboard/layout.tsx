@@ -21,17 +21,22 @@ import {
   Home,
   LineChart,
   Menu,
+  Power,
   Search,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
+import { auth, signOut } from '@/auth';
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  const user = session?.user;
+
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Dashboard' },
     { href: '/dashboard/members', icon: Users, label: 'Members' },
@@ -116,19 +121,29 @@ export default function DashboardLayout({
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
                 <Avatar>
-                  <AvatarImage src="https://i.pravatar.cc/150?u=admin" />
-                  <AvatarFallback>AD</AvatarFallback>
+                  <AvatarImage src={user?.image ?? ''} />
+                  <AvatarFallback>{user?.name?.slice(0, 2) ?? 'AD'}</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>{user?.name ?? 'My Account'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <form action={async () => {
+                  'use server';
+                  await signOut({ redirectTo: '/login' });
+                }}
+                className="w-full"
+              >
+                  <button type="submit" className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent">
+                      <Power className="h-4 w-4" />
+                      <span>Logout</span>
+                  </button>
+              </form>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
