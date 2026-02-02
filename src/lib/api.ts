@@ -18,9 +18,18 @@ export async function getMembers(query?: string): Promise<Member[]> {
     return db.all('SELECT * FROM members ORDER BY name');
 }
 
-export async function getContributions(): Promise<Contribution[]> {
+export async function getContributions(query?: string): Promise<Contribution[]> {
     const db = await getDb();
-    const contributions = await db.all<Contribution[]>('SELECT * FROM contributions ORDER BY date DESC');
+    let contributions;
+    if (query) {
+        const searchTerm = `%${query}%`;
+        contributions = await db.all<Contribution[]>(
+            'SELECT * FROM contributions WHERE memberName LIKE ? ORDER BY date DESC',
+            searchTerm
+        );
+    } else {
+        contributions = await db.all<Contribution[]>('SELECT * FROM contributions ORDER BY date DESC');
+    }
     return contributions.map(c => ({...c, isAnomalous: !!c.isAnomalous}));
 }
 
