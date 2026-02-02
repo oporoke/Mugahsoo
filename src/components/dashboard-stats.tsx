@@ -22,25 +22,42 @@ export function DashboardStats({ members, contributions, welfareRequests }: Dash
   const activeMembers = members.filter(m => m.status === 'active').length;
   
   const latestContributionDate = contributions.length > 0 ? new Date(contributions[0].date) : new Date();
-  const latestMonth = latestContributionDate.getMonth();
-  const latestYear = latestContributionDate.getFullYear();
+  const currentMonthIndex = latestContributionDate.getMonth();
+  const currentYear = latestContributionDate.getFullYear();
+  
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-  const latestMonthContributions = contributions.filter(c => {
+  // This Month
+  const thisMonthContributions = contributions.filter(c => {
     const date = new Date(c.date);
-    return date.getFullYear() === latestYear && date.getMonth() === latestMonth;
+    return date.getFullYear() === currentYear && date.getMonth() === currentMonthIndex;
   });
-  const latestMonthTotal = latestMonthContributions.reduce((sum, c) => sum + c.amount, 0);
+  const thisMonthTotal = thisMonthContributions.reduce((sum, c) => sum + c.amount, 0);
+  const thisMonthName = monthNames[currentMonthIndex];
+
+  // Last Month
+  const lastMonthDate = new Date(currentYear, currentMonthIndex - 1, 1);
+  const lastMonthIndex = lastMonthDate.getMonth();
+  const lastMonthYear = lastMonthDate.getFullYear();
+
+  const lastMonthContributions = contributions.filter(c => {
+    const date = new Date(c.date);
+    return date.getFullYear() === lastMonthYear && date.getMonth() === lastMonthIndex;
+  });
+  const lastMonthTotal = lastMonthContributions.reduce((sum, c) => sum + c.amount, 0);
+  const lastMonthName = monthNames[lastMonthIndex];
+
 
   const stats = [
     { title: 'Total Fund Balance', value: formatCurrency(totalFundBalance), icon: Landmark, description: 'Current total funds' },
     { title: 'Total Members', value: totalMembers, icon: Users, description: `${activeMembers} active` },
     { title: 'Pending Welfare', value: pendingRequests, icon: Activity, description: 'Requests needing review' },
-    { title: 'Latest Month\'s Contributions', value: formatCurrency(latestMonthTotal), icon: Wallet, description: `Contributions in ${monthNames[latestMonth]}` },
+    { title: 'Last Month\'s Contributions', value: formatCurrency(lastMonthTotal), icon: Wallet, description: `Contributions in ${lastMonthName}` },
+    { title: 'This Month\'s Contributions', value: formatCurrency(thisMonthTotal), icon: Wallet, description: `Contributions in ${thisMonthName}` },
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-5">
       {stats.map((stat) => (
         <Card key={stat.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -56,3 +73,4 @@ export function DashboardStats({ members, contributions, welfareRequests }: Dash
     </div>
   );
 }
+
