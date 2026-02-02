@@ -15,9 +15,11 @@ export function OverviewChart({ contributions }: { contributions: Contribution[]
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const monthlyData = monthNames.map(month => ({ name: month, total: 0 }));
 
+  const currentYear = new Date().getFullYear();
+
   contributions.forEach(c => {
     const date = new Date(c.date);
-    if (date.getFullYear() === 2026) {
+    if (date.getFullYear() === currentYear) {
       const month = date.getMonth();
       monthlyData[month].total += c.amount;
     }
@@ -26,7 +28,7 @@ export function OverviewChart({ contributions }: { contributions: Contribution[]
   return (
     <Card className="lg:col-span-2 xl:col-span-2">
       <CardHeader>
-        <CardTitle>Overview</CardTitle>
+        <CardTitle>Overview ({currentYear})</CardTitle>
       </CardHeader>
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>

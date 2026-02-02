@@ -23,6 +23,7 @@ import {
   Power,
   FileText,
   Users,
+  LayoutDashboard,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
@@ -39,7 +40,7 @@ export default async function DashboardLayout({
   const userRole = user?.role ?? 'MEMBER';
 
   const allNavItems = [
-    { href: '/dashboard', icon: User, label: 'My Profile', roles: ['ADMIN', 'TREASURER', 'MEMBER'] },
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['ADMIN', 'TREASURER', 'MEMBER'] },
     { href: '/dashboard/members', icon: Users, label: 'Members', roles: ['ADMIN'] },
     { href: '/dashboard/contributions', icon: HandCoins, label: 'Contributions', roles: ['ADMIN', 'TREASURER', 'MEMBER'] },
     { href: '/dashboard/welfare', icon: HeartHandshake, label: 'Welfare', roles: ['ADMIN', 'TREASURER', 'MEMBER'] },
@@ -47,7 +48,7 @@ export default async function DashboardLayout({
   ];
 
   const navItems = allNavItems.filter((item) => item.roles.includes(userRole));
-
+  
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-card md:block no-print">
@@ -125,8 +126,14 @@ export default async function DashboardLayout({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{user?.name ?? 'My Account'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
+               {userRole === 'MEMBER' && (
+                  <Link href={'/dashboard'}>
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>My Profile</span>
+                    </DropdownMenuItem>
+                  </Link>
+                )}
               <DropdownMenuSeparator />
               <form action={async () => {
                   'use server';

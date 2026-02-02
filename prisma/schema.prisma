@@ -1,14 +1,31 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+datasource db {
+  provider     = "sqlite"
+  url          = env("DATABASE_URL")
+}
 
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+enum Role {
+  ADMIN
+  TREASURER
+  MEMBER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(MEMBER)
+  
+  accounts Account[]
+  sessions Session[]
+  member   Member?
 }
 
 model Account {
@@ -38,25 +55,6 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  accounts      Account[]
-  sessions      Session[]
-  member        Member?
-  role          Role      @default(MEMBER)
-}
-
-enum Role {
-  ADMIN
-  TREASURER
-  MEMBER
-}
-
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -66,37 +64,40 @@ model VerificationToken {
 }
 
 model Member {
-  id              String           @id @default(cuid())
-  userId          String           @unique
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  name          String
+  email         String    @unique
+  memberSince   DateTime  @default(now())
+  avatarUrl     String?
+  status        String    @default("active") // "active" | "inactive"
+
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name            String
-  email           String           @unique
-  memberSince     DateTime         @default(now())
-  avatarUrl       String?
-  status          String           @default("active") // active, inactive
   contributions   Contribution[]
   welfareRequests WelfareRequest[]
 }
 
 model Contribution {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   memberId      String
-  member        Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberName    String
   date          DateTime
   amount        Float
-  method        String // Paybill, Bank Transfer
-  isAnomalous   Boolean?
+  method        String
+  isAnomalous   Boolean? @default(false)
   anomalyReason String?
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 model WelfareRequest {
   id          String   @id @default(cuid())
   memberId    String
-  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberName  String
   requestDate DateTime @default(now())
   amount      Float
   reason      String
-  status      String // Pending, Approved, Rejected, Disbursed
+  status      String   // "Pending" | "Approved" | "Rejected" | "Disbursed"
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }

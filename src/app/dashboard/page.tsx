@@ -1,5 +1,5 @@
 
-import { getMemberByUserId, getContributionsForMember, getWelfareRequestsForMember } from '@/lib/api';
+import { getMemberByUserId, getContributionsForMember, getWelfareRequestsForMember, getDashboardData } from '@/lib/api';
 import { MemberProfile } from '@/components/member-profile';
 import { notFound, redirect } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
@@ -7,6 +7,7 @@ import { auth } from '@/auth';
 import { DashboardStats } from '@/components/dashboard-stats';
 import { OverviewChart } from '@/components/overview-chart';
 import { RecentTransactionsTable } from '@/components/recent-transactions-table';
+import { AdminDashboard } from '@/components/admin-dashboard';
 
 
 export default async function DashboardPage() {
@@ -15,9 +16,25 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
+  const userRole = session.user.role;
+
+  if (userRole === 'ADMIN' || userRole === 'TREASURER') {
+    const { members, contributions, welfareRequests } = await getDashboardData();
+    return (
+        <AdminDashboard 
+            members={members}
+            contributions={contributions}
+            welfareRequests={welfareRequests}
+        />
+    )
+  }
+
   const member = await getMemberByUserId(session.user.id);
 
   if (!member) {
+    // This could happen if a user exists but the member record wasn't created.
+    // Or if the user is an admin without a member record for themselves.
+    // For now, we show a not found page. A better UX might guide them.
     notFound();
   }
 
@@ -29,12 +46,7 @@ export default async function DashboardPage() {
   return (
     <>
       <div className="flex flex-col gap-8">
-        <MemberProfile 
-            member={member} 
-            initialContributions={contributions} 
-            initialWelfareRequests={welfareRequests} 
-        />
-
+        {/* The main member dashboard is effectively the member profile view */}
         <div className="grid flex-1 items-start gap-4 md:gap-8">
             <PageHeader title="Your Dashboard" />
             <DashboardStats contributions={contributions} welfareRequests={welfareRequests} />
@@ -43,6 +55,13 @@ export default async function DashboardPage() {
                 <RecentTransactionsTable contributions={contributions} welfareRequests={welfareRequests} members={[member]} />
             </div>
         </div>
+        
+        {/* And below, we show the detailed profile */}
+        <MemberProfile 
+            member={member} 
+            initialContributions={contributions} 
+            initialWelfareRequests={welfareRequests} 
+        />
       </div>
     </>
   );
