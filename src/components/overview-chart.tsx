@@ -23,7 +23,7 @@ contributions.forEach(c => {
 
 export function OverviewChart() {
   return (
-    <Card className="col-span-1 lg:col-span-2">
+    <Card className="lg:col-span-2 xl:col-span-2">
       <CardHeader>
         <CardTitle>Overview</CardTitle>
       </CardHeader>

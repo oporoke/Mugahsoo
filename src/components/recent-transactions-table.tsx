@@ -24,18 +24,31 @@ import { formatCurrency } from '@/lib/utils';
 import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
 export function RecentTransactionsTable() {
-  const transactions = [
-    ...contributions.slice(0, 3).map(c => ({...c, type: 'contribution'})),
-    ...welfareRequests.filter(w => w.status === 'Disbursed').slice(0, 2).map(w => ({...w, type: 'disbursement'}))
+    const allTransactions = [
+    ...contributions.map(c => ({
+      id: `c-${c.id}`,
+      type: 'contribution' as const,
+      date: c.date,
+      ...c,
+    })),
+    ...welfareRequests
+      .filter(w => w.status === 'Disbursed')
+      .map(w => ({
+        id: `w-${w.id}`,
+        type: 'disbursement' as const,
+        date: w.requestDate,
+        ...w,
+      })),
   ]
-  .sort((a, b) => new Date(b.date || b.requestDate).getTime() - new Date(a.date || a.requestDate).getTime());
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
 
   return (
-    <Card className="col-span-1 lg:col-span-2">
+    <Card className="lg:col-span-2 xl:col-span-1">
       <CardHeader>
         <CardTitle>Recent Transactions</CardTitle>
         <CardDescription>
-          Recent contributions and welfare disbursements.
+          Your 5 most recent contributions and welfare disbursements.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -43,12 +56,13 @@ export function RecentTransactionsTable() {
           <TableHeader>
             <TableRow>
               <TableHead>Member</TableHead>
-              <TableHead className="text-center">Type</TableHead>
+              <TableHead className="hidden text-center sm:table-cell">Type</TableHead>
+              <TableHead className="hidden text-center md:table-cell">Date</TableHead>
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((transaction) => {
+            {allTransactions.map((transaction) => {
               const member = members.find(m => m.id === transaction.memberId);
               return (
               <TableRow key={transaction.id}>
@@ -61,7 +75,7 @@ export function RecentTransactionsTable() {
                     <div className="font-medium">{transaction.memberName}</div>
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="hidden text-center sm:table-cell">
                   {transaction.type === 'contribution' ? (
                     <Badge variant="outline" className="text-green-600 border-green-600/50">
                       <ArrowUpRight className="mr-1 h-3 w-3" />
@@ -73,6 +87,9 @@ export function RecentTransactionsTable() {
                       Disbursement
                     </Badge>
                   )}
+                </TableCell>
+                <TableCell className="hidden text-center md:table-cell">
+                    {new Date(transaction.date).toLocaleDateString()}
                 </TableCell>
                 <TableCell className={`text-right font-medium ${transaction.type === 'contribution' ? 'text-green-600' : 'text-red-600'}`}>
                   {formatCurrency(transaction.amount)}

@@ -14,17 +14,22 @@ export function DashboardStats() {
   const pendingRequests = welfareRequests.filter(r => r.status === 'Pending').length;
   const activeMembers = members.filter(m => m.status === 'active').length;
   
-  const julyContributions = contributions.filter(c => {
+  const latestContributionDate = contributions.length > 0 ? new Date(contributions[0].date) : new Date();
+  const latestMonth = latestContributionDate.getMonth();
+  const latestYear = latestContributionDate.getFullYear();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+  const latestMonthContributions = contributions.filter(c => {
     const date = new Date(c.date);
-    return date.getFullYear() === 2024 && date.getMonth() === 6; // 6 is July
+    return date.getFullYear() === latestYear && date.getMonth() === latestMonth;
   });
-  const julyTotal = julyContributions.reduce((sum, c) => sum + c.amount, 0);
+  const latestMonthTotal = latestMonthContributions.reduce((sum, c) => sum + c.amount, 0);
 
   const stats = [
     { title: 'Total Fund Balance', value: formatCurrency(totalFundBalance), icon: DollarSign, description: 'Current total funds' },
     { title: 'Total Members', value: totalMembers, icon: Users, description: `${activeMembers} active` },
     { title: 'Pending Welfare', value: pendingRequests, icon: Activity, description: 'Requests needing review' },
-    { title: 'This Month\'s Contributions', value: formatCurrency(julyTotal), icon: Wallet, description: 'Contributions in July' },
+    { title: 'Latest Month\'s Contributions', value: formatCurrency(latestMonthTotal), icon: Wallet, description: `Contributions in ${monthNames[latestMonth]}` },
   ];
 
   return (
