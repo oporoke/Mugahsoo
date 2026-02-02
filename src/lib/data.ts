@@ -60,27 +60,6 @@ const otherContributions: Contribution[] = [
   { id: 'CON004', memberId: 'MEM028', memberName: 'Loise Okeyo', date: '2024-07-15', amount: 600, method: 'Bank Transfer', isAnomalous: true, anomalyReason: 'Contribution is double the monthly amount.' },
   { id: 'CON005', memberId: 'MEM049', memberName: 'Dan Mugah', date: '2024-07-15', amount: 300, method: 'Paybill' },
 
-  // More contributions for July
-  { id: 'CON006', memberId: 'MEM001', memberName: 'Kepher Otieno', date: '2024-07-01', amount: 300, method: 'Paybill' },
-  { id: 'CON007', memberId: 'MEM002', memberName: 'Maureen Okeyo', date: '2024-07-01', amount: 300, method: 'Paybill' },
-  { id: 'CON008', memberId: 'MEM004', memberName: 'Melvine Akoth', date: '2024-07-03', amount: 300, method: 'Paybill' },
-  { id: 'CON009', memberId: 'MEM005', memberName: 'Caroline Dima', date: '2024-07-03', amount: 300, method: 'Paybill' },
-  { id: 'CON010', memberId: 'MEM007', memberName: 'Vilma William', date: '2024-07-04', amount: 300, method: 'Paybill' },
-  { id: 'CON011', memberId: 'MEM008', memberName: 'Wilson Okeyo', date: '2024-07-05', amount: 300, method: 'Bank Transfer' },
-  { id: 'CON012', memberId: 'MEM009', memberName: 'Hawkins Okeyo', date: '2024-07-05', amount: 300, method: 'Paybill' },
-
-  // Contributions for June
-  { id: 'CON013', memberId: 'MEM001', memberName: 'Kepher Otieno', date: '2024-06-01', amount: 300, method: 'Paybill' },
-  { id: 'CON014', memberId: 'MEM002', memberName: 'Maureen Okeyo', date: '2024-06-01', amount: 300, method: 'Paybill' },
-  { id: 'CON015', memberId: 'MEM006', memberName: 'William Mugah', date: '2024-06-15', amount: 300, method: 'Paybill' },
-  { id: 'CON016', memberId: 'MEM010', memberName: 'Mary Ann', date: '2024-06-15', amount: 450, method: 'Paybill', isAnomalous: true, anomalyReason: 'Contribution amount is 50% higher than monthly amount.' },
-  { id: 'CON017', memberId: 'MEM019', memberName: 'Jared Awuoche', date: '2024-06-15', amount: 300, method: 'Paybill' },
-  { id: 'CON018', memberId: 'MEM028', memberName: 'Loise Okeyo', date: '2024-06-15', amount: 300, method: 'Bank Transfer' },
-  { id: 'CON019', memberId: 'MEM049', memberName: 'Dan Mugah', date: '2024-06-15', amount: 300, method: 'Paybill' },
-  
-  // Contributions for May
-  { id: 'CON020', memberId: 'MEM001', memberName: 'Kepher Otieno', date: '2024-05-01', amount: 300, method: 'Paybill' },
-  { id: 'CON021', memberId: 'MEM002', memberName: 'Maureen Okeyo', date: '2024-05-01', amount: 300, method: 'Paybill' },
 ];
 
 export const contributions: Contribution[] = [...januaryContributions, ...otherContributions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
