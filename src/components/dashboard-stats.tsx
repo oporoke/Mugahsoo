@@ -73,4 +73,3 @@ export function DashboardStats({ members, contributions, welfareRequests }: Dash
     </div>
   );
 }
-
