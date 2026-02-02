@@ -1,12 +1,21 @@
 
 import { WelfareTable } from '@/components/welfare-table';
-import { getWelfareRequests, getMembers } from '@/lib/api';
+import { getWelfareRequests, getMemberByUserId } from '@/lib/api';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
 
 export default async function WelfarePage() {
-  const [allRequests, allMembers] = await Promise.all([
-    getWelfareRequests(),
-    getMembers(),
-  ]);
+    const session = await auth();
+    if (!session?.user?.id) {
+        redirect('/login');
+    }
 
-  return <WelfareTable requests={allRequests} members={allMembers} />;
+    const member = await getMemberByUserId(session.user.id);
+    if (!member) {
+        return <p>Member details not found.</p>;
+    }
+
+    const allRequests = await getWelfareRequests(member.id);
+
+    return <WelfareTable requests={allRequests} currentMember={member} />;
 }

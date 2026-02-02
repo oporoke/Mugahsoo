@@ -40,10 +40,15 @@ export async function getMembers(query?: string): Promise<Member[]> {
     return members.map(serializeMember);
 }
 
-export async function getContributions(query?: string): Promise<Contribution[]> {
-    const where = query
-        ? { memberName: { contains: query, mode: 'insensitive' } }
-        : {};
+export async function getContributions(query?: string, memberId?: string): Promise<Contribution[]> {
+    let where: any = {};
+    if (query) {
+        where.memberName = { contains: query, mode: 'insensitive' };
+    }
+    if (memberId) {
+        where.memberId = memberId;
+    }
+
     const contributions = await prisma.contribution.findMany({
         where,
         orderBy: { date: 'desc' },
@@ -51,8 +56,10 @@ export async function getContributions(query?: string): Promise<Contribution[]> 
     return contributions.map(serializeContribution);
 }
 
-export async function getWelfareRequests(): Promise<WelfareRequest[]> {
+export async function getWelfareRequests(memberId?: string): Promise<WelfareRequest[]> {
+    const where = memberId ? { memberId } : {};
     const requests = await prisma.welfareRequest.findMany({
+        where,
         orderBy: { requestDate: 'desc' },
     });
     return requests.map(serializeWelfareRequest);
@@ -63,6 +70,13 @@ export async function getMember(id: string): Promise<Member | null> {
     if (!member) return null;
     return serializeMember(member);
 }
+
+export async function getMemberByUserId(userId: string): Promise<Member | null> {
+    const member = await prisma.member.findUnique({ where: { userId } });
+    if (!member) return null;
+    return serializeMember(member);
+}
+
 
 export async function getUserByEmail(email: string) {
     return prisma.user.findUnique({ where: { email } });
@@ -85,7 +99,14 @@ export async function getWelfareRequestsForMember(memberId: string): Promise<Wel
     return requests.map(serializeWelfareRequest);
 }
 
-export async function getDashboardData() {
+export async function getDashboardData(memberId?: string) {
+    if (memberId) {
+        const member = await getMember(memberId);
+        const contributions = await getContributionsForMember(memberId);
+        const welfareRequests = await getWelfareRequestsForMember(memberId);
+        return { members: member ? [member] : [], contributions, welfareRequests };
+    }
+
     const members = await getMembers();
     const contributions = await getContributions();
     const welfareRequests = await getWelfareRequests();

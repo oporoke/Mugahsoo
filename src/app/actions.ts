@@ -76,7 +76,7 @@ export async function addMemberAction(formData: FormData) {
   try {
     await createUserAndMember({ name, email });
     console.log('Adding new member:', {name, email});
-    revalidatePath('/dashboard/members');
+    revalidatePath('/dashboard');
     return { success: true, message: `Member ${name} added successfully.` };
   } catch (error) {
     console.error('Error adding member:', error);
@@ -88,20 +88,18 @@ export async function updateMemberAction(formData: FormData) {
   const id = formData.get('id') as string;
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;
-  const status = formData.get('status') as 'active' | 'inactive';
+  const status = formData.get('status') as 'active' | 'inactive' | undefined;
 
-  if (!id || !name || !email || !status) {
-    return { success: false, message: 'All fields are required.' };
+  if (!id || !name || !email) {
+    return { success: false, message: 'Name and email are required.' };
   }
 
   try {
-    await dbUpdateMember(id, { name, email, status });
-    revalidatePath(`/dashboard/members/${id}`);
-    revalidatePath('/dashboard/members');
+    await dbUpdateMember(id, { name, email, status: status ?? 'active' });
+    revalidatePath(`/dashboard`);
     revalidatePath('/dashboard/contributions');
     revalidatePath('/dashboard/welfare');
-    revalidatePath('/dashboard');
-    return { success: true, message: `Member ${name} updated successfully.` };
+    return { success: true, message: `Profile updated successfully.` };
   } catch (error) {
     console.error('Error updating member:', error);
     return { success: false, message: 'Failed to update member. Email might already exist.' };
@@ -116,10 +114,9 @@ export async function deleteMemberAction(formData: FormData) {
 
     try {
         await dbDeleteMember(id);
-        revalidatePath('/dashboard/members');
+        revalidatePath('/dashboard');
         revalidatePath('/dashboard/contributions');
         revalidatePath('/dashboard/welfare');
-        revalidatePath('/dashboard');
         return { success: true, message: 'Member deleted successfully.' };
     } catch (error) {
         console.error('Error deleting member:', error);
@@ -157,10 +154,8 @@ export async function addContributionAction(formData: FormData) {
       anomalyReason: result.reason
     });
     
-    revalidatePath(`/dashboard/members/${memberId}`);
+    revalidatePath(`/dashboard`);
     revalidatePath('/dashboard/contributions');
-    revalidatePath('/dashboard');
-    revalidatePath('/dashboard/members');
 
     return { success: true, ...result };
   } catch (error) {
@@ -200,7 +195,6 @@ export async function updateWelfareRequestStatusAction(requestId: string, status
         console.log(`[SIMULATED NOTIFICATION] Member ${updatedRequest.memberName} notified: Their welfare request status has been updated to "${status}".`);
     }
     revalidatePath('/dashboard/welfare');
-    revalidatePath('/dashboard/members');
     revalidatePath('/dashboard');
     return { success: true, message: `Request status updated to ${status}.` };
   } catch (error) {

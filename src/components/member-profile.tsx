@@ -5,12 +5,11 @@ import * as React from 'react';
 import {
   AlertCircle,
   Loader2,
-  Trash2,
   Edit
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { addContributionAction, updateMemberAction, deleteMemberAction } from '@/app/actions';
+import { updateMemberAction } from '@/app/actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,9 +52,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from './ui/tooltip';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 
 export function MemberProfile({ 
@@ -68,9 +65,6 @@ export function MemberProfile({
   initialWelfareRequests: WelfareRequest[];
 }) {
   const [isEditOpen, setEditOpen] = React.useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const { toast } = useToast();
-  const formRef = React.useRef<HTMLFormElement>(null);
   
   const [contributions, setContributions] = React.useState<Contribution[]>(initialContributions);
   const [welfareRequests, setWelfareRequests] = React.useState<WelfareRequest[]>(initialWelfareRequests);
@@ -86,38 +80,6 @@ export function MemberProfile({
     setWelfareRequests(requests);
     setIsLoading(false);
   }, [member.id]);
-
-  const handleAddContribution = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    const formData = new FormData(event.currentTarget);
-    formData.append('memberId', member.id);
-
-    const result = await addContributionAction(formData);
-
-    if (result.success) {
-      toast({
-        title: 'Contribution Added',
-        description: `Contribution for ${member.name} has been recorded.`,
-      });
-      if (result.isAnomalous) {
-        toast({
-          variant: 'destructive',
-          title: 'Anomaly Detected',
-          description: result.reason,
-        });
-      }
-      formRef.current?.reset();
-      fetchData();
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add contribution.',
-      });
-    }
-    setIsSubmitting(false);
-  };
 
   const getStatusBadge = (status: WelfareRequest['status']) => {
     switch (status) {
@@ -163,32 +125,8 @@ export function MemberProfile({
             </CardContent>
              <CardContent>
               <div className="flex gap-2">
-                <Button variant="outline" className="w-full" onClick={() => setEditOpen(true)}><Edit className="mr-2 h-4 w-4"/> Edit</Button>
-                <DeleteConfirmationButton member={member} />
+                <Button variant="outline" className="w-full" onClick={() => setEditOpen(true)}><Edit className="mr-2 h-4 w-4"/> Edit Profile</Button>
               </div>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader>
-              <CardTitle>New Contribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form ref={formRef} onSubmit={handleAddContribution} className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="amount">Amount</Label>
-                  <Input
-                    id="amount"
-                    name="amount"
-                    type="number"
-                    step="0.01"
-                    required
-                  />
-                </div>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Add & Check Anomaly
-                </Button>
-              </form>
             </CardContent>
           </Card>
         </div>
@@ -323,19 +261,12 @@ function EditMemberDialog({ member, isOpen, setIsOpen }: { member: Member, isOpe
       <DialogContent>
         <form onSubmit={handleEditSubmit}>
           <DialogHeader>
-            <DialogTitle>Edit Member: {member.name}</DialogTitle>
-            <DialogDescription>Update the member's details below.</DialogDescription>
+            <DialogTitle>Edit Profile: {member.name}</DialogTitle>
+            <DialogDescription>Update your details below.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2"><Label htmlFor="name">Name</Label><Input id="name" name="name" defaultValue={member.name} required /></div>
             <div className="grid gap-2"><Label htmlFor="email">Email</Label><Input id="email" name="email" type="email" defaultValue={member.email} required /></div>
-            <div className="grid gap-2">
-              <Label>Status</Label>
-              <RadioGroup name="status" defaultValue={member.status} className="flex gap-4">
-                <div className="flex items-center space-x-2"><RadioGroupItem value="active" id="active" /><Label htmlFor="active">Active</Label></div>
-                <div className="flex items-center space-x-2"><RadioGroupItem value="inactive" id="inactive" /><Label htmlFor="inactive">Inactive</Label></div>
-              </RadioGroup>
-            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>Cancel</Button>
@@ -344,47 +275,5 @@ function EditMemberDialog({ member, isOpen, setIsOpen }: { member: Member, isOpe
         </form>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function DeleteConfirmationButton({ member }: { member: Member }) {
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isOpen, setIsOpen] = React.useState(false);
-  const { toast } = useToast();
-  const router = useRouter();
-
-  const handleDelete = async () => {
-    setIsSubmitting(true);
-    const formData = new FormData();
-    formData.append('id', member.id);
-    const result = await deleteMemberAction(formData);
-    if (result.success) {
-      toast({ title: 'Success', description: result.message });
-      setIsOpen(false);
-      router.push('/dashboard/members');
-    } else {
-      toast({ variant: 'destructive', title: 'Error', description: result.message ?? 'Failed to delete member.' });
-      setIsSubmitting(false);
-    }
-  }
-
-  return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive" className="w-full"><Trash2 className="mr-2 h-4 w-4" /> Delete</Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>This action cannot be undone. This will permanently delete {member.name} and all of their associated data.</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} disabled={isSubmitting} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
-             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Delete Member
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
   );
 }
