@@ -8,6 +8,7 @@ import { DashboardStats } from '@/components/dashboard-stats';
 import { OverviewChart } from '@/components/overview-chart';
 import { RecentTransactionsTable } from '@/components/recent-transactions-table';
 import { AdminDashboard } from '@/components/admin-dashboard';
+import type { Role } from '@prisma/client';
 
 
 export default async function DashboardPage() {
@@ -16,7 +17,7 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const userRole = session.user.role;
+  const userRole = session.user.role as Role;
 
   if (userRole === 'ADMIN' || userRole === 'TREASURER') {
     const { members, contributions, welfareRequests } = await getDashboardData();
@@ -60,7 +61,8 @@ export default async function DashboardPage() {
         <MemberProfile 
             member={member} 
             initialContributions={contributions} 
-            initialWelfareRequests={welfareRequests} 
+            initialWelfareRequests={welfareRequests}
+            currentUserRole={userRole}
         />
       </div>
     </>

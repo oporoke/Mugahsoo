@@ -53,16 +53,20 @@ import {
   TooltipTrigger,
 } from './ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import type { Role } from '@prisma/client';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 
 export function MemberProfile({ 
   member, 
   initialContributions, 
-  initialWelfareRequests 
+  initialWelfareRequests,
+  currentUserRole
 }: { 
   member: Member;
   initialContributions: Contribution[];
   initialWelfareRequests: WelfareRequest[];
+  currentUserRole: Role;
 }) {
   const [isEditOpen, setEditOpen] = React.useState(false);
   
@@ -222,12 +226,12 @@ export function MemberProfile({
           </Tabs>
         </div>
       </div>
-      <EditMemberDialog member={member} isOpen={isEditOpen} setIsOpen={setEditOpen} />
+      <EditMemberDialog member={member} isOpen={isEditOpen} setIsOpen={setEditOpen} currentUserRole={currentUserRole} />
     </TooltipProvider>
   );
 }
 
-function EditMemberDialog({ member, isOpen, setIsOpen }: { member: Member, isOpen: boolean, setIsOpen: (open: boolean) => void }) {
+function EditMemberDialog({ member, isOpen, setIsOpen, currentUserRole }: { member: Member, isOpen: boolean, setIsOpen: (open: boolean) => void, currentUserRole: Role }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -262,11 +266,25 @@ function EditMemberDialog({ member, isOpen, setIsOpen }: { member: Member, isOpe
         <form onSubmit={handleEditSubmit}>
           <DialogHeader>
             <DialogTitle>Edit Profile: {member.name}</DialogTitle>
-            <DialogDescription>Update your details below.</DialogDescription>
+            <DialogDescription>Update the member's details below.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2"><Label htmlFor="name">Name</Label><Input id="name" name="name" defaultValue={member.name} required /></div>
             <div className="grid gap-2"><Label htmlFor="email">Email</Label><Input id="email" name="email" type="email" defaultValue={member.email} required /></div>
+            {currentUserRole === 'ADMIN' && (
+              <div className="grid gap-2">
+                <Label htmlFor="status">Status</Label>
+                <Select name="status" defaultValue={member.status}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>Cancel</Button>

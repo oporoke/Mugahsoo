@@ -126,15 +126,6 @@ export default async function DashboardLayout({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{user?.name ?? 'My Account'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-               {userRole === 'MEMBER' && (
-                  <Link href={'/dashboard'}>
-                    <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>My Profile</span>
-                    </DropdownMenuItem>
-                  </Link>
-                )}
-              <DropdownMenuSeparator />
               <form action={async () => {
                   'use server';
                   await signOut({ redirectTo: '/login' });

@@ -1,19 +1,27 @@
 
+'use client';
+
 import Link from "next/link";
-import { redirect } from 'next/navigation';
+import { useFormState, useFormStatus } from 'react-dom';
 import { signupAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
-import { auth } from "@/auth";
+import { Loader2 } from "lucide-react";
 
-export default async function SignupPage() {
-  const session = await auth();
-  if (session) {
-    redirect('/dashboard');
-  }
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Create Account'}
+    </Button>
+  );
+}
+
+export default function SignupPage() {
+  const [state, formAction] = useFormState(signupAction, undefined);
   
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background/60 p-4">
@@ -26,7 +34,7 @@ export default async function SignupPage() {
           <CardDescription>Enter your details to join WelfareWise</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={signupAction} className="grid gap-4">
+          <form action={formAction} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
               <Input id="name" name="name" placeholder="John Doe" required />
@@ -39,9 +47,10 @@ export default async function SignupPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" name="password" type="password" required />
             </div>
-            <Button type="submit" className="w-full">
-              Create Account
-            </Button>
+             {state && !state.success && (
+                <p className="text-sm font-medium text-destructive">{state.message}</p>
+            )}
+            <SubmitButton />
           </form>
            <div className="mt-4 text-center text-sm">
             Already have an account?{" "}

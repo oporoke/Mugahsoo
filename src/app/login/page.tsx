@@ -1,4 +1,6 @@
+
 import { signIn } from "@/auth"
+import { AlertCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -6,8 +8,15 @@ import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo";
 import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: { searchParams?: { error?: string } }) {
+  
+  const errorMessages: { [key: string]: string } = {
+    CredentialsSignin: 'Invalid email or password.',
+    Default: 'Something went wrong. Please try again.',
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background/60 p-4">
       <Card className="w-full max-w-sm">
@@ -19,15 +28,19 @@ export default function LoginPage() {
           <CardDescription>Sign in to manage your welfare group</CardDescription>
         </CardHeader>
         <CardContent>
+          {searchParams?.error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Login Failed</AlertTitle>
+              <AlertDescription>
+                {errorMessages[searchParams.error] || errorMessages.Default}
+              </AlertDescription>
+            </Alert>
+          )}
           <form
             action={async (formData) => {
               "use server"
-              try {
-                await signIn("credentials", formData)
-              } catch (error) {
-                // TODO: Handle specific errors
-                console.error(error);
-              }
+              await signIn("credentials", formData)
             }}
             className="grid gap-4"
           >

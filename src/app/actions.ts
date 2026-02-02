@@ -21,7 +21,7 @@ import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 import { auth, signIn } from '@/auth';
 
-export async function signupAction(formData: FormData) {
+export async function signupAction(prevState: any, formData: FormData) {
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
