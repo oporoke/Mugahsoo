@@ -27,6 +27,7 @@ import {
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
 import { auth, signOut } from '@/auth';
+import { GlobalSearch } from '@/components/global-search';
 
 export default async function DashboardLayout({
   children,
@@ -108,7 +109,9 @@ export default async function DashboardLayout({
               </nav>
             </SheetContent>
           </Sheet>
-          <div className="w-full flex-1" />
+          <div className="w-full flex-1">
+            <GlobalSearch />
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">

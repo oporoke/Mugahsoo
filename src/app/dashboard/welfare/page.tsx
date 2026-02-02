@@ -23,7 +23,7 @@ export default async function WelfarePage() {
         memberIdForQuery = member.id;
     }
 
-    const allRequests = await getWelfareRequests(memberIdForQuery);
+    const allRequests = await getWelfareRequests({ memberId: memberIdForQuery });
 
     return <WelfareTable requests={allRequests} currentMember={member} role={userRole} />;
 }

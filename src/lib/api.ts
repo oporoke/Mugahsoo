@@ -23,12 +23,13 @@ const serializeWelfareRequest = (r: any): WelfareRequest => ({
 });
 
 
-export async function getMembers(query?: string): Promise<Member[]> {
+export async function getMembers({ query }: { query?: string } = {}): Promise<Member[]> {
     const where = query
         ? {
             OR: [
                 { name: { contains: query, mode: 'insensitive' } },
                 { email: { contains: query, mode: 'insensitive' } },
+                { id: { contains: query, mode: 'insensitive' } },
             ],
         }
         : {};
@@ -40,10 +41,13 @@ export async function getMembers(query?: string): Promise<Member[]> {
     return members.map(serializeMember);
 }
 
-export async function getContributions(query?: string, memberId?: string): Promise<Contribution[]> {
+export async function getContributions({ query, memberId }: { query?: string; memberId?: string; } = {}): Promise<Contribution[]> {
     let where: any = {};
     if (query) {
-        where.memberName = { contains: query, mode: 'insensitive' };
+        where.OR = [
+            { memberName: { contains: query, mode: 'insensitive' } },
+            { method: { contains: query, mode: 'insensitive' } },
+        ]
     }
     if (memberId) {
         where.memberId = memberId;
@@ -56,8 +60,17 @@ export async function getContributions(query?: string, memberId?: string): Promi
     return contributions.map(serializeContribution);
 }
 
-export async function getWelfareRequests(memberId?: string): Promise<WelfareRequest[]> {
-    const where = memberId ? { memberId } : {};
+export async function getWelfareRequests({ query, memberId }: { query?: string; memberId?: string; } = {}): Promise<WelfareRequest[]> {
+    const where: any = {};
+    if (query) {
+        where.OR = [
+            { memberName: { contains: query, mode: 'insensitive' } },
+            { reason: { contains: query, mode: 'insensitive' } },
+        ];
+    }
+    if (memberId) {
+        where.memberId = memberId;
+    }
     const requests = await prisma.welfareRequest.findMany({
         where,
         orderBy: { requestDate: 'desc' },

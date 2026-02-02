@@ -4,7 +4,7 @@ import { getContributions, getMemberByUserId } from '@/lib/api';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 
-export default async function ContributionsPage() {
+export default async function ContributionsPage({ searchParams }: { searchParams?: { query?: string } }) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect('/login');
@@ -22,7 +22,7 @@ export default async function ContributionsPage() {
     memberId = member.id;
   }
   
-  const allContributions = await getContributions(undefined, memberId);
+  const allContributions = await getContributions({ memberId });
 
   return <ContributionsTable contributions={allContributions} />;
 }

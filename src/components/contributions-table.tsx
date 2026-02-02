@@ -43,7 +43,7 @@ import {
   TooltipTrigger,
 } from './ui/tooltip';
 
-export function ContributionsTable({ contributions }: { contributions: Contribution[] }) {
+export function ContributionsTable({ contributions, showControls = true }: { contributions: Contribution[], showControls?: boolean }) {
   const [filter, setFilter] = React.useState<'all' | 'paybill' | 'bank'>('all');
   const router = useRouter();
 
@@ -56,6 +56,7 @@ export function ContributionsTable({ contributions }: { contributions: Contribut
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-4">
+        {showControls && (
         <PageHeader title="Your Contributions">
           <div className="flex items-center gap-2">
             <DropdownMenu>
@@ -92,6 +93,7 @@ export function ContributionsTable({ contributions }: { contributions: Contribut
             </DropdownMenu>
           </div>
         </PageHeader>
+        )}
         <Card>
           <CardHeader>
             <CardTitle>Contribution History</CardTitle>

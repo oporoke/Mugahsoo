@@ -45,7 +45,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Role } from '@prisma/client';
 
-export function WelfareTable({ requests, currentMember, role }: { requests: WelfareRequest[], currentMember: Member, role: Role }) {
+export function WelfareTable({ requests, currentMember, role, showControls = true }: { requests: WelfareRequest[], currentMember: Member, role: Role, showControls?: boolean }) {
   const { toast } = useToast();
   
   const getStatusBadge = (status: WelfareRequest['status']) => {
@@ -76,9 +76,11 @@ export function WelfareTable({ requests, currentMember, role }: { requests: Welf
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title={isAdminOrTreasurer ? "Welfare Requests" : "Your Welfare Requests"}>
-        <NewRequestDialog memberId={currentMember.id} />
-      </PageHeader>
+      {showControls && (
+        <PageHeader title={isAdminOrTreasurer ? "Welfare Requests" : "Your Welfare Requests"}>
+          <NewRequestDialog memberId={currentMember.id} />
+        </PageHeader>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Request History</CardTitle>
@@ -117,7 +119,7 @@ export function WelfareTable({ requests, currentMember, role }: { requests: Welf
                     <TableCell className="text-right">
                       {formatCurrency(request.amount)}
                     </TableCell>
-                    {isAdminOrTreasurer && (
+                    {isAdminOrTreasurer && showControls && (
                         <TableCell className="text-right">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

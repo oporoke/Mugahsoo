@@ -43,7 +43,7 @@ import type { Member } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from './page-header';
 
-export function MembersTable({ members }: { members: Member[] }) {
+export function MembersTable({ members, showControls = true }: { members: Member[], showControls?: boolean }) {
   const [isAddMemberOpen, setAddMemberOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { toast } = useToast();
@@ -84,6 +84,7 @@ export function MembersTable({ members }: { members: Member[] }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {showControls && (
       <PageHeader title="Members">
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -140,11 +141,14 @@ export function MembersTable({ members }: { members: Member[] }) {
           </Dialog>
         </div>
       </PageHeader>
+      )}
       <Card>
-        <CardHeader>
-          <CardTitle>Member List</CardTitle>
-          <CardDescription>Click on a member to view their details.</CardDescription>
-        </CardHeader>
+        {showControls && (
+          <CardHeader>
+            <CardTitle>Member List</CardTitle>
+            <CardDescription>Click on a member to view their details.</CardDescription>
+          </CardHeader>
+        )}
         <CardContent>
           <Table>
             <TableHeader>
